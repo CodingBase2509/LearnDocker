@@ -1,0 +1,96 @@
+version: '3.7'
+
+services:
+  elasticsetup:
+    container_name: setup
+    image: elasticsearch:8.5.3
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs
+    user: "0"
+    command: >
+      bash -c '
+        cd /usr/share/elasticsearch;
+        if [ ! -d config/certs ]; then
+          mkdir ./config/certs;
+        else
+          echo "config/certs exists";
+        fi;
+
+        if [ ! -f config/certs/ca.zip ]; then
+          echo "Creating CA";
+          bin/elasticsearch-certutil ca --silent --pem -out config/certs/ca.zip;
+          unzip config/certs/ca.zip -d config/certs;
+        else
+          echo "CA exists"
+        fi;
+
+        if [ ! -f config/certs/instances.yml ]; then
+          echo "Creating instances.yml"
+          echo -ne \
+          "instances:\n"\
+          "  - name: es01\n"\
+          "    dns:\n"\
+          "      - es01\n"\
+          "      - localhost\n"\
+          "    ip:\n"\
+          "      - 127.0.0.1\n"\
+          > config/certs/instances.yml;
+        else
+         echo "instances.yml exists"
+        fi;
+
+        if [ ! -f config/certs/bundle.zip ]; then
+          echo "Creating certs"
+          bin/elasticsearch-certutil cert --silent --ca-cert config/certs/ca/ca.crt --ca-key config/certs/ca/ca.key --pem --in config/certs/instances.yml --out config/certs/bundle.zip;
+          unzip config/certs/bundle.zip -d config/certs; 
+        else
+          echo "bundle.zip and certificates exists"
+        fi;
+        chown -R 1000:0 config/certs
+      '
+
+  elasticsearch:
+    depends_on:
+      elasticsetup:
+        condition: service_completed_successfully
+    container_name: elastic
+    image: elasticsearch:8.5.3
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      node.name: es01
+      cluster.name: dockercluster
+      discovery.type: single-node
+      ELASTIC_PASSWORD: test1234
+      xpack.security.enabled: true
+      xpack.security.http.ssl.enabled: true
+      xpack.security.http.ssl.key: certs/es01/es01.key
+      xpack.security.http.ssl.certificate_authorities: certs/ca/ca.crt
+      xpack.security.http.ssl.certificate: certs/es01/es01.crt
+      xpack.security.transport.ssl.enabled: true
+      xpack.security.transport.ssl.verification_mode: certificate 
+      xpack.security.transport.ssl.certificate_authorities: certs/ca/ca.crt
+      xpack.security.transport.ssl.certificate: certs/es01/es01.crt
+      xpack.security.transport.ssl.key: certs/es01/es01.key 
+      xpack.license.self_generated.type: basic
+    volumes:
+      - certs:/usr/share/elasticsearch/config/certs
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test:
+        [
+          "CMDSHELL",
+          "curl s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep q 'missing authentication credentials'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+
+volumes:
+  certs:
+    driver: local
