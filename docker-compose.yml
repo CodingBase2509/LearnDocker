@@ -2,10 +2,10 @@ version: '3.7'
 
 services:
   elasticsetup:
-    container_name: setup
+    container_name: elastic_setup
     image: elasticsearch:8.5.3
     volumes:
-      - certs:/usr/share/elasticsearch/config/certs
+      - ./elasticsearch/certs:/usr/share/elasticsearch/config/certs
     user: "0"
     command: >
       bash -c '
@@ -75,7 +75,7 @@ services:
       xpack.security.transport.ssl.key: certs/es01/es01.key 
       xpack.license.self_generated.type: basic
     volumes:
-      - certs:/usr/share/elasticsearch/config/certs
+      - ./elasticsearch/certs:/usr/share/elasticsearch/config/certs
       - ./elasticsearch/data:/usr/share/elasticsearch/data
     ulimits:
       memlock:
@@ -91,6 +91,25 @@ services:
       timeout: 10s
       retries: 120
 
-volumes:
-  certs:
-    driver: local
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    ports:
+      - 8089:8080
+      - 8090:8443
+    command:
+      - start-dev
+      - --https-key-store-file=keycloak.jks
+      - --https-key-store-password=keycloak
+      - --https-certificate-file=/var/keycloak/serverCertificates/server.crt.pem
+      - --https-certificate-key-file=/var/keycloak/serverCertificates/server.key.pem
+      - --http-enabled=false
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+    - ./keycloak/certs:/var/keycloak/serverCertificates
+    - ./keycloak/data:/opt/keycloak/data
+
+    
+
