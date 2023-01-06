@@ -1,3 +1,4 @@
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { KeycloakService } from 'keycloak-angular';
@@ -27,7 +28,8 @@ function initializeKeycloak(keycloak: KeycloakService) {
   imports: [
     BrowserModule,
     AppRoutingModule,
-    KeycloakAngularModule
+    KeycloakAngularModule,
+    HttpClientModule
   ],
   providers: [
     {

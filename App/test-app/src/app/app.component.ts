@@ -25,10 +25,14 @@ export class AppComponent implements OnInit {
       this.userProfile = await this.keycloak.loadUserProfile();
     }
 
-    this.http.get<string>('https://localhost:9200/profiles/_search', {
-      withCredentials: true,
-      headers: new HttpHeaders().append('username', 'elastic').append('password', 'test1234'),
-    }).subscribe(data => {
+    let options = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${btoa('elatic:test1234')}`
+      })
+    }
+
+    this.http.get<string>('https://elastic:9200/profiles/_search', options).subscribe(data => {
       this.elastic_data = data;
     });
   }
