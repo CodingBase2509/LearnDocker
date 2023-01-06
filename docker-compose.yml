@@ -111,12 +111,11 @@ services:
     - ./keycloak/certs:/var/keycloak/serverCertificates
     - ./keycloak/data:/opt/keycloak/data
 
-  # test-app:
-  #   depends_on:
-  #     keycloak:
-  #       condition: service_started
-  #   image: dasler/test-angular-app:0.1-alpha
-  #   container_name: test-app
-  #   ports:
-  #     - 80:80
-  
+  test-app:
+    depends_on:
+      keycloak:
+        condition: service_started
+    image: dasler/test-angular-app:0.1-alpha
+    container_name: test-app
+    ports:
+      - 80:80
