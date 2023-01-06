@@ -63,6 +63,13 @@ services:
       cluster.name: dockercluster
       discovery.type: single-node
       ELASTIC_PASSWORD: test1234
+      http.cors.allow-origin: "http://localhost"
+      http.cors.enabled: true
+      http.cors.allow-headers: "X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization"
+      http.cors.allow-credentials: true
+      transport.host: localhost
+      network.host: 0.0.0.0
+      http.port: 9200
       xpack.security.enabled: true
       xpack.security.http.ssl.enabled: true
       xpack.security.http.ssl.key: certs/es01/es01.key
@@ -74,6 +81,7 @@ services:
       xpack.security.transport.ssl.certificate: certs/es01/es01.crt
       xpack.security.transport.ssl.key: certs/es01/es01.key 
       xpack.license.self_generated.type: basic
+      ES_JAVA_OPTS: "-Xmx2048m -Xms2048m"
     volumes:
       - ./elasticsearch/certs:/usr/share/elasticsearch/config/certs
       - ./elasticsearch/data:/usr/share/elasticsearch/data
