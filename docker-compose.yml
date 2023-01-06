@@ -115,7 +115,7 @@ services:
   #   depends_on:
   #     keycloak:
   #       condition: service_started
-  #   image: test-app:0.1-alpha
+  #   image: dasler/test-angular-app:0.1-alpha
   #   container_name: test-app
   #   ports:
   #     - 80:80
